@@ -11,6 +11,8 @@ name: GPU Simulator
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ verify-gpu-sim ]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled]
     branches: ["master"]
@@ -85,3 +87,10 @@ jobs:
         run: |
           vgpu run ctest --test-dir build_hip --output-on-failure --no-tests=error -j2 \
             -E '^TestMultipoleT(Straight|CurvedConstRadius)$'
+
+      # Verification only (not in the PR): a wrong expected value must fail.
+      - name: Break-the-test check
+        run: |
+          sed -i 's/EXPECT_DOUBLE_EQ(zEnd, 0.1)/EXPECT_DOUBLE_EQ(zEnd, 0.7)/' unit_tests/AbsBeamline/TestBox.cpp
+          cmake --build build_hip -j3 --target TestBox
+          if vgpu run ctest --test-dir build_hip --output-on-failure -R '^TestBox$'; then echo "broken test passed"; exit 1; fi
