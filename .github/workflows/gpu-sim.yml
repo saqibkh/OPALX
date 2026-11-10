@@ -83,9 +83,11 @@ jobs:
       # the simulator stops on a buffer_load_dword whose address adds the lane id
       # (VirtualGPU error [unsupported]), which is a simulator gap, not an OPALX
       # failure. The other 130 tests of the 132 run.
+      # No -j: TestFFT2D5Numerics has a 300 s ctest timeout and took 227 s with
+      # two tests in parallel, then timed out on a slower runner.
       - name: Test
         run: |
-          vgpu run ctest --test-dir build_hip --output-on-failure --no-tests=error -j2 \
+          vgpu run ctest --test-dir build_hip --output-on-failure --no-tests=error \
             -E '^TestMultipoleT(Straight|CurvedConstRadius)$'
 
       # Verification only (not in the PR): a wrong expected value must fail.
